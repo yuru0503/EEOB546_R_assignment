@@ -1,0 +1,13 @@
+---
+title: "R_assignment"
+author: "Yu-Ru Chen"
+date: "3/16/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## this is EEOB546 R assignment
+
