@@ -9,5 +9,43 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## this is EEOB546 R assignment
+
+##Load the 2 files into genotype and pos data frame
+
+```{r}
+
+genotype <- as.data.frame(read.table("fang_et_al_genotypes.txt", sep="\t",header=TRUE))
+pos <- as.data.frame(read.table("snp_position.txt", sep="\t",header=TRUE))
+str(genotype)
+str(pos)
+
+```
+
+
+##Subset the pos data frame to keep the SNP_ID, Chr, and Pos columns
+>change the `unknown` and `multiple` to be NA, and adjust the characters of the column.
+
+```{r}
+
+redPos <- pos[,c(1,3,4)]
+head(redPos)
+
+redPos[redPos == "unknown"] <- NA
+redPos[redPos == "multiple"] <- NA
+redPos$Chromosome <- as.numeric(redPos$Chromosome)
+redPos$Position <- as.numeric(redPos$Position)
+str(redPos)
+
+```
+
+
+##Subset the genotype data into maize and teosinte datasets
+
+```{r}
+
+maize <- genotype[which(genotype$Group=="ZMMIL" | genotype$Group =="ZMMLR" | genotype$Group == "ZMMMR"),]
+teosinte <-genotype[which(genotype$Group=="ZMPBA" | genotype$Group =="ZMPIL" | genotype$Group == "ZMPJA"),]
+
+```
+
 
