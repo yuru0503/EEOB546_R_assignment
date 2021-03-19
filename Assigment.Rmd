@@ -2,7 +2,9 @@
 title: "R_Assignment"
 author: "Yu-Ru Chen"
 date: "3/16/2021"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -11,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Data inspection
 
-##Load the 2 files into genotype and pos data frame
+## Load the 2 files into genotype and pos data frame
 
 ```{r}
 library(tidyverse)
@@ -22,7 +24,7 @@ pos <- as.data.frame(read.table("snp_position.txt", sep="\t",header=TRUE))
 ```
 
 ## SNP genotypes data
-`fang_et_al_genotypes.txt` is assigned to be the genotype dataframe.
+`fang_et_al_genotypes.txt` is assigned to be the genotype data frame.
 ```{r}
 dim(genotype)
 sapply(genotype, class)[1:6]
@@ -208,7 +210,7 @@ ggplot(genotype3)+
 sample_size = posred %>% group_by(Chromosome) %>% summarize(num=n())
 
 library(viridis)  
-library(hrbrthemes)
+
 posred %>%
   left_join(sample_size) %>%
   mutate(myaxis = paste0(Chromosome, "\n", "n=", num)) %>%
@@ -216,7 +218,6 @@ posred %>%
   geom_violin(width=1.4) +
   geom_boxplot(width=0.1, color="grey", alpha=0.2) +
   scale_fill_viridis(discrete = TRUE) +
-    theme_ipsum() +
     theme(
       legend.position="none",
       plot.title = element_text(size=11)
