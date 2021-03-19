@@ -170,40 +170,9 @@ pos %>%
 
 ```
 
-
-
-```{r}
-
-maize2<- maize %>% mutate(Group="maize")
-teosinte2 <- teosinte %>% mutate(Group="teosinte")
-combo <- full_join(maizewp2,teosintewp2, by=c("SNP_ID", "Chromosome", "Position"))
-dim(maizewp2); dim(teosintewp2); dim(combo)
-combo[1:6,1:6]
-teosinte2[1:6,1:6]
-
-combo %>% 
-  group_by(Chromosome, type.x, type.y) %>% 
-  count()
-  
-  summarise(Number=length(Position)) 
-%>%
-  ggplot()+
-  geom_bar(aes(x=Chromosome, y=Number))
-
-  
-  
-ggplot(posTableSum,aes(x = Group,y = n,fill = Group)) + geom_bar(stat = "identity")  + 
-  facet_wrap(~Chromosome, scales = "free_y",ncol=5,nrow=2) + theme_bw()+
-  theme(axis.text.x = element_blank(),axis.ticks.x = element_blank())  
-```
-
-
 ## Missing data and amount of heterozygosity
 
 ```{r}
-
-combo <- full_join(maizewp,teosintewp, by=c("SNP_ID", "Chromosome", "Position"))
-dim(maizewp); dim(teosintewp); dim(combo)
 
 genotype2 <- genotype[,-2]
 genotype2[1:6,1:6]
@@ -229,6 +198,13 @@ ggplot(genotype3)+
   
 ggplot(genotype3)+
   geom_bar(aes(x=Group, fill=GenotypeABH), position = "fill")
+
+```
+
+```{r}
+
+combo <- full_join(maizewp,teosintewp, by=c("SNP_ID", "Chromosome", "Position"))
+dim(maizewp); dim(teosintewp); dim(combo)
 
 ```
 
