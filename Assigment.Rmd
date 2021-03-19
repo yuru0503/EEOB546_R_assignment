@@ -1,5 +1,5 @@
 ---
-title: "R_assignment"
+title: "R_Assignment"
 author: "Yu-Ru Chen"
 date: "3/16/2021"
 output: html_document
@@ -59,7 +59,7 @@ pos %>%
 
 # Data processing
 
-##Subset the pos data frame to keep the SNP_ID, Chr, and Pos columns
+## Subset the pos data frame to keep the SNP_ID, Chr, and Pos columns
 >adjust the characters of the column and remove the `unknown` and `multiple` which are regarded as NAs out
 
 ```{r}
@@ -74,7 +74,7 @@ str(posred)
 
 ```
 
-##Subset the genotype data into maize and teosinte datasets
+## Subset the genotype data into maize and teosinte datasets
 
 ```{r}
 
@@ -83,7 +83,7 @@ teosinte <-genotype[which(genotype$Group=="ZMPBA" | genotype$Group =="ZMPIL" | g
 
 ```
 
-##Formatting the maize file to merge the redPos and maize file
+## Formatting the maize file to merge the redPos and maize file
 
 ```{r}
 
@@ -102,7 +102,7 @@ maizewp <- maizewp %>% arrange(Chromosome,Position)
 
 ```
 
-##Formatting the teosinte file to merge the redPos and maize file
+## Formatting the teosinte file to merge the redPos and maize file
 ```{r}
 
 teosinte <- teosinte[,c(-2,-3)]
@@ -120,7 +120,7 @@ teosintewp <- teosintewp %>% arrange(Chromosome,Position)
 
 ## Splitting the maize data into different files by chromosomes and SNP positions. 
 
-```{r}
+```{r, eval = FALSE}
 chr <- 1:10
 for (i in chr) {
   files_inc <- maizewp[maizewp$Chromosome == i,]
@@ -140,7 +140,7 @@ for (i in chr) {
 
 ## Splitting the teosinte data into different files by chromosomes and SNP positions.
 
-```{r}
+```{r, eval = FALSE}
 
 chr <- 1:10
 for (i in chr) {
@@ -203,7 +203,7 @@ ggplot(genotype3)+
 
 
 
-```{r}
+```{r, warning = FALSE}
 
 sample_size = posred %>% group_by(Chromosome) %>% summarize(num=n())
 
