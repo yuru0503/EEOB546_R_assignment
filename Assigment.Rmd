@@ -18,14 +18,18 @@ library(tidyverse)
 
 genotype <- as.data.frame(read.table("fang_et_al_genotypes.txt", sep="\t",header=TRUE))
 pos <- as.data.frame(read.table("snp_position.txt", sep="\t",header=TRUE))
-str(genotype)
-str(pos)
 
 ```
 
 ## SNP genotypes data
-`fang_et_al_genotypes.txt`
+`fang_et_al_genotypes.txt` is assigned to be the genotype dataframe.
 ```{r}
+dim(genotype)
+sapply(genotype, class)[1:6]
+#str(genotype)
+#glimpse(genotype)
+colnames(genotype)[1:6]
+genotype[1:6,1:6]
 genotype %>% 
   group_by(Group) %>% 
   count()
@@ -33,8 +37,24 @@ genotype %>%
 ```
 
 ## SNP markers information
-`snp_position.txt`
+`snp_position.txt` is assigned to be the pos dataframe.
 
+```{r}
+dim(pos)
+sapply(pos, class)[1:6]
+str(pos)
+glimpse(pos)
+colnames(pos)[1:6]
+pos[1:6,1:6]
+
+pos[pos == "unknown"] <- NA
+pos[pos == "multiple"] <- NA
+
+pos %>% 
+  group_by(Chromosome) %>% 
+  summarise(Max=max(Position, na.rm = T), Min=min(Position, na.rm = T),    Number=length(Position))
+
+```
 
 
 # Data processing
@@ -54,7 +74,6 @@ str(posred)
 
 ```
 
-
 ##Subset the genotype data into maize and teosinte datasets
 
 ```{r}
@@ -63,8 +82,6 @@ maize <- genotype[which(genotype$Group=="ZMMIL" | genotype$Group =="ZMMLR" | gen
 teosinte <-genotype[which(genotype$Group=="ZMPBA" | genotype$Group =="ZMPIL" | genotype$Group == "ZMPJA"),]
 
 ```
-
-
 
 ##Formatting the maize file to merge the redPos and maize file
 
@@ -79,12 +96,11 @@ colnames(maize) <- maize[1,]
 maize <- maize[-1,]
 maize <- as.data.frame(maize)
 colnames(maize)[1] <- "SNP_ID" 
-maizewp <- merge(posred,maize,by = "SNP_ID")
+maizewp <- merge(posred, maize, by = "SNP_ID")
 maizewp <- maizewp %>% arrange(Chromosome,Position) 
 ## maize genotypes with SNP position information
 
 ```
-
 
 ##Formatting the teosinte file to merge the redPos and maize file
 ```{r}
@@ -97,17 +113,12 @@ colnames(teosinte) <- teosinte[1,]
 teosinte <- teosinte[-1,]
 teosinte <- as.data.frame(teosinte)
 colnames(teosinte)[1] <- "SNP_ID" 
-teosintewp <- merge(posred,teosinte,by = "SNP_ID")
+teosintewp <- merge(posred, teosinte, by = "SNP_ID")
 teosintewp <- teosintewp %>% arrange(Chromosome,Position)
-
-
 
 ```
 
 ## Splitting the maize data into different files by chromosomes and SNP positions. 
-
-
-
 
 ```{r}
 chr <- 1:10
@@ -126,7 +137,6 @@ for (i in chr) {
   
 
 ```
-
 
 ## Splitting the teosinte data into different files by chromosomes and SNP positions.
 
@@ -148,6 +158,77 @@ for (i in chr) {
 
 ```
 
+## SNPs per chromosome
+
+```{r}
+
+pos %>% 
+  select(SNP_ID, Chromosome, Position) %>%
+  drop_na() %>% 
+  ggplot()+
+  geom_bar(aes(x=Chromosome))
+
+```
 
 
+
+```{r}
+
+maize2<- maize %>% mutate(Group="maize")
+teosinte2 <- teosinte %>% mutate(Group="teosinte")
+combo <- full_join(maizewp2,teosintewp2, by=c("SNP_ID", "Chromosome", "Position"))
+dim(maizewp2); dim(teosintewp2); dim(combo)
+combo[1:6,1:6]
+teosinte2[1:6,1:6]
+
+combo %>% 
+  group_by(Chromosome, type.x, type.y) %>% 
+  count()
+  
+  summarise(Number=length(Position)) 
+%>%
+  ggplot()+
+  geom_bar(aes(x=Chromosome, y=Number))
+
+  
+  
+ggplot(posTableSum,aes(x = Group,y = n,fill = Group)) + geom_bar(stat = "identity")  + 
+  facet_wrap(~Chromosome, scales = "free_y",ncol=5,nrow=2) + theme_bw()+
+  theme(axis.text.x = element_blank(),axis.ticks.x = element_blank())  
+```
+
+
+## Missing data and amount of heterozygosity
+
+```{r}
+
+combo <- full_join(maizewp,teosintewp, by=c("SNP_ID", "Chromosome", "Position"))
+dim(maizewp); dim(teosintewp); dim(combo)
+
+genotype2 <- genotype[,-2]
+genotype2[1:6,1:6]
+
+## create a function to detect the SNP genotypes
+ABH <- function(x) {
+  if ( x == "A/A" | x == "C/C" | x == "G/G" | x == "T/T") {
+    return("A|B")
+  }
+  else if (x == "?/?") {
+    return("NA")
+  }
+  else {return("H")}
+}
+ABH_V <- Vectorize(ABH) ## make the function be a vectorized function 
+
+genotype3 <- genotype2 %>% 
+  pivot_longer(3:last_col(), names_to = "SNP", values_to = "Genotype") %>% 
+  mutate( GenotypeABH = ABH_V(Genotype)) 
+
+ggplot(genotype3)+
+  geom_bar(aes(x=Sample_ID, fill=GenotypeABH), position = "fill")
+  
+ggplot(genotype3)+
+  geom_bar(aes(x=Group, fill=GenotypeABH), position = "fill")
+
+```
 
