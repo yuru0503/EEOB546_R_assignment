@@ -201,10 +201,28 @@ ggplot(genotype3)+
 
 ```
 
+
+
 ```{r}
 
-combo <- full_join(maizewp,teosintewp, by=c("SNP_ID", "Chromosome", "Position"))
-dim(maizewp); dim(teosintewp); dim(combo)
+sample_size = posred %>% group_by(Chromosome) %>% summarize(num=n())
+
+library(viridis)  
+library(hrbrthemes)
+posred %>%
+  left_join(sample_size) %>%
+  mutate(myaxis = paste0(Chromosome, "\n", "n=", num)) %>%
+  ggplot( aes(x=myaxis, y=Position, fill=as.character(Chromosome)))+
+  geom_violin(width=1.4) +
+  geom_boxplot(width=0.1, color="grey", alpha=0.2) +
+  scale_fill_viridis(discrete = TRUE) +
+    theme_ipsum() +
+    theme(
+      legend.position="none",
+      plot.title = element_text(size=11)
+    ) +
+    ggtitle("The distribution of the SNP postion in each chromosomes") +
+    xlab("Chromosome") 
 
 ```
 
