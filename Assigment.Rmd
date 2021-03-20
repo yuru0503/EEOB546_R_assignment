@@ -3,8 +3,8 @@ title: "R_Assignment"
 author: "Yu-Ru Chen"
 date: "`r Sys.Date()`"
 output:
-  html_document: default
   pdf_document:  default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -24,7 +24,7 @@ pos <- as.data.frame(read.table("snp_position.txt", sep="\t",header=TRUE))
 ```
 
 #### SNP genotypes data
-`fang_et_al_genotypes.txt` is assigned to be the genotype data frame, which is large dimension data set, so use `dim`, `str`, `glimpse` and etc functions to know the number of rows and columns, column names and their variable types. 
+* `fang_et_al_genotypes.txt` is assigned to be the genotype data frame, which is large dimension data set, so use `dim`, `str`, `glimpse` and etc functions to know the number of rows and columns, column names and their variable types. 
 
 
 ```{r}
@@ -42,8 +42,8 @@ genotype %>%
 
 #### SNP markers information
 * `snp_position.txt` is assigned to be the pos data frame. 
-*Using the same function to know the data strcuture of the pos data frame.
-*Replacing the `unknown` and `multiple` in Position column to be `NA` and to know how many numbers of SNP markers, and their maximum and minimum position value in each of chromosome.
+* Using the same function to know the data strcuture of the pos data frame.
+* Replacing the `unknown` and `multiple` in Position column to be `NA` and to know how many numbers of SNP markers, and their maximum and minimum position value in each of chromosome.
 
 ```{r}
 dim(pos)
@@ -66,7 +66,7 @@ pos %>%
 ### Data processing
 
 #### Subset the pos data frame to keep the SNP_ID, Chr, and Pos columns for the merging purpose
-Adjust the variable type of `chromosome` and `Position` to be numeric and remove the `unknown` and `multiple` which are regarded as NAs out to be posred dataframe.
+* Adjust the variable type of `chromosome` and `Position` to be numeric and remove the `unknown` and `multiple` which are regarded as NAs out to be posred dataframe.
 
 ```{r}
 
@@ -82,7 +82,7 @@ str(posred)
 
 #### Subset the genotype data into maize and teosinte datasets
 
-Subset the maize and teosinte genotypes by filter group column. Base on my understanding, the `filter` function in `dplyr` package doesn't work for the strings, which is just for numeric types elements. 
+* Subset the maize and teosinte genotypes by filter group column. Base on my understanding, the `filter` function in `dplyr` package doesn't work for the strings, which is just for numeric types elements. 
 
 ```{r}
 
@@ -93,7 +93,7 @@ teosinte <-genotype[which(genotype$Group=="ZMPBA" | genotype$Group =="ZMPIL" | g
 
 #### Formatting the maize genotype with SNP information by merging the posred and maize data
 
-Transform the `maize` data for merging with `posred` by `SNP_ID` column, and descend the Chromosome and Position.  
+* Transform the `maize` data for merging with `posred` by `SNP_ID` column, and descend the Chromosome and Position.  
 
 ```{r}
 
@@ -114,7 +114,7 @@ maizewp <- maizewp %>% arrange(Chromosome,Position)
 
 #### Formatting the teosinte genotype with SNP information by merging the posred and teosinte data
 
-The same methods as with maize for merging data frame.
+* The same methods as with maize for merging data frame.
 
 ```{r}
 
@@ -133,7 +133,7 @@ teosintewp <- teosintewp %>% arrange(Chromosome,Position)
 
 #### Splitting the maize data into different files by the chromosomes and SNP positions. 
 
-The followings are using `loop` to separate the `maizewp` and `teosintewp` data frames to 10, 10, 10, and 10 files, respectively, by the chromosome and SNP positions in total 40 files. Also, change the missing genotype to be `?` or `-`.
+* The followings are using `loop` to separate the `maizewp` and `teosintewp` data frames to 10, 10, 10, and 10 files, respectively, by the chromosome and SNP positions in total 40 files. Also, change the missing genotype to be `?` or `-`.
 
 ```{r, eval = FALSE}
 chr <- 1:10

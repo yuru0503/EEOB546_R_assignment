@@ -192,7 +192,9 @@ pos &lt;- as.data.frame(read.table(&quot;snp_position.txt&quot;, sep=&quot;\t&qu
 </div>
 <div id="snp-genotypes-data" class="section level4">
 <h4>SNP genotypes data</h4>
-<p><code>fang_et_al_genotypes.txt</code> is assigned to be the genotype data frame, which is large dimension data set, so use <code>dim</code>, <code>str</code>, <code>glimpse</code> and etc functions to know the number of rows and columns, column names and their variable types.</p>
+<ul>
+<li><code>fang_et_al_genotypes.txt</code> is assigned to be the genotype data frame, which is large dimension data set, so use <code>dim</code>, <code>str</code>, <code>glimpse</code> and etc functions to know the number of rows and columns, column names and their variable types.</li>
+</ul>
 <pre class="r"><code>dim(genotype)</code></pre>
 <pre><code>## [1] 2782  986</code></pre>
 <pre class="r"><code>sapply(genotype, class)[1:6]</code></pre>
@@ -237,7 +239,9 @@ colnames(genotype)[1:6]</code></pre>
 <div id="snp-markers-information" class="section level4">
 <h4>SNP markers information</h4>
 <ul>
-<li><code>snp_position.txt</code> is assigned to be the pos data frame. <em>Using the same function to know the data strcuture of the pos data frame. </em>Replacing the <code>unknown</code> and <code>multiple</code> in Position column to be <code>NA</code> and to know how many numbers of SNP markers, and their maximum and minimum position value in each of chromosome.</li>
+<li><code>snp_position.txt</code> is assigned to be the pos data frame.</li>
+<li>Using the same function to know the data strcuture of the pos data frame.</li>
+<li>Replacing the <code>unknown</code> and <code>multiple</code> in Position column to be <code>NA</code> and to know how many numbers of SNP markers, and their maximum and minimum position value in each of chromosome.</li>
 </ul>
 <pre class="r"><code>dim(pos)</code></pre>
 <pre><code>## [1] 983  15</code></pre>
@@ -318,7 +322,9 @@ pos %&gt;%
 <h3>Data processing</h3>
 <div id="subset-the-pos-data-frame-to-keep-the-snp_id-chr-and-pos-columns-for-the-merging-purpose" class="section level4">
 <h4>Subset the pos data frame to keep the SNP_ID, Chr, and Pos columns for the merging purpose</h4>
-<p>Adjust the variable type of <code>chromosome</code> and <code>Position</code> to be numeric and remove the <code>unknown</code> and <code>multiple</code> which are regarded as NAs out to be posred dataframe.</p>
+<ul>
+<li>Adjust the variable type of <code>chromosome</code> and <code>Position</code> to be numeric and remove the <code>unknown</code> and <code>multiple</code> which are regarded as NAs out to be posred dataframe.</li>
+</ul>
 <pre class="r"><code>posred &lt;- pos %&gt;% 
   select(SNP_ID, Chromosome, Position) %&gt;% 
   mutate(Chromosome=as.numeric(Chromosome),
@@ -333,13 +339,17 @@ str(posred)</code></pre>
 </div>
 <div id="subset-the-genotype-data-into-maize-and-teosinte-datasets" class="section level4">
 <h4>Subset the genotype data into maize and teosinte datasets</h4>
-<p>Subset the maize and teosinte genotypes by filter group column. Base on my understanding, the <code>filter</code> function in <code>dplyr</code> package doesn’t work for the strings, which is just for numeric types elements.</p>
+<ul>
+<li>Subset the maize and teosinte genotypes by filter group column. Base on my understanding, the <code>filter</code> function in <code>dplyr</code> package doesn’t work for the strings, which is just for numeric types elements.</li>
+</ul>
 <pre class="r"><code>maize &lt;- genotype[which(genotype$Group==&quot;ZMMIL&quot; | genotype$Group ==&quot;ZMMLR&quot; | genotype$Group == &quot;ZMMMR&quot;),]
 teosinte &lt;-genotype[which(genotype$Group==&quot;ZMPBA&quot; | genotype$Group ==&quot;ZMPIL&quot; | genotype$Group == &quot;ZMPJA&quot;),]</code></pre>
 </div>
 <div id="formatting-the-maize-genotype-with-snp-information-by-merging-the-posred-and-maize-data" class="section level4">
 <h4>Formatting the maize genotype with SNP information by merging the posred and maize data</h4>
-<p>Transform the <code>maize</code> data for merging with <code>posred</code> by <code>SNP_ID</code> column, and descend the Chromosome and Position.</p>
+<ul>
+<li>Transform the <code>maize</code> data for merging with <code>posred</code> by <code>SNP_ID</code> column, and descend the Chromosome and Position.</li>
+</ul>
 <pre class="r"><code>maize &lt;- maize[,c(-2,-3)]
 maize[1:6,1:6] ## have a look</code></pre>
 <pre><code>##      Sample_ID abph1.20 abph1.22 ae1.3 ae1.4 ae1.5
@@ -362,7 +372,9 @@ maizewp &lt;- maizewp %&gt;% arrange(Chromosome,Position)
 </div>
 <div id="formatting-the-teosinte-genotype-with-snp-information-by-merging-the-posred-and-teosinte-data" class="section level4">
 <h4>Formatting the teosinte genotype with SNP information by merging the posred and teosinte data</h4>
-<p>The same methods as with maize for merging data frame.</p>
+<ul>
+<li>The same methods as with maize for merging data frame.</li>
+</ul>
 <pre class="r"><code>teosinte &lt;- teosinte[,c(-2,-3)]
 teosinte &lt;- t(teosinte)
 teosinte &lt;- cbind(rownames(teosinte),teosinte)
@@ -376,7 +388,9 @@ teosintewp &lt;- teosintewp %&gt;% arrange(Chromosome,Position)</code></pre>
 </div>
 <div id="splitting-the-maize-data-into-different-files-by-the-chromosomes-and-snp-positions." class="section level4">
 <h4>Splitting the maize data into different files by the chromosomes and SNP positions.</h4>
-<p>The followings are using <code>loop</code> to separate the <code>maizewp</code> and <code>teosintewp</code> data frames to 10, 10, 10, and 10 files, respectively, by the chromosome and SNP positions in total 40 files. Also, change the missing genotype to be <code>?</code> or <code>-</code>.</p>
+<ul>
+<li>The followings are using <code>loop</code> to separate the <code>maizewp</code> and <code>teosintewp</code> data frames to 10, 10, 10, and 10 files, respectively, by the chromosome and SNP positions in total 40 files. Also, change the missing genotype to be <code>?</code> or <code>-</code>.</li>
+</ul>
 <pre class="r"><code>chr &lt;- 1:10
 for (i in chr) {
   files_inc &lt;- maizewp[maizewp$Chromosome == i,]
