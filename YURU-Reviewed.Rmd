@@ -1,0 +1,38 @@
+---
+title: "Peer_Review"
+author: "Giang Nguyen"
+date: "3/22/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Subset the genotype data into maize and teosinte datasets
+Filter () works for me to Subset the maize and teosinte genotypes by group column. 
+Here is my script:
+maize_genotypes <- filter(genotypes, Group == "ZMMLR" | Group == "ZMMIL" | Group == "ZMMMR") 
+
+#### Formatting the maize genotype with SNP information by merging the posred and maize data
+maize <- maize[,c(-2,-3)] ## Why? I think we need information from column 1,2, and 3
+#### Splitting the maize data into different files by the chromosomes and SNP positions. 
+
+Why don't you try lapply and sapply to avoid loop?
+
+For example:
+
+
+maize_ded <- data.frame(lapply(maize_genotypes, as.character), stringsAsFactors=FALSE)
+ #To created another data frame for maize_genotype, I used lapply function to return a list of maize_genotype, each element of which is the result of applying as.character function to the corresponding element of maize genotype. 
+
+maize_ded <- data.frame(sapply( maize_ded,function(x) { x <- gsub("?","-",x,fixed=TRUE)} ))
+  # then I used gsub function to search for "?" and "-" in maize_ded, but sapply returns a vector or matrix.
+  
+
+
+```{r cars}
+summary(cars)
+```
+
+
