@@ -1,0 +1,276 @@
+---
+title: "R_Assignment"
+author: "Yu-Ru Chen"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:  default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Part I
+
+### Data inspection
+
+#### Loading the 2 files to be the `genotype` and `pos` data frames
+
+```{r}
+library(tidyverse)
+
+genotype <- as.data.frame(read.table("fang_et_al_genotypes.txt", sep="\t",header=TRUE))
+pos <- as.data.frame(read.table("snp_position.txt", sep="\t",header=TRUE))
+
+```
+
+#### SNP genotypes data
+
+-   `fang_et_al_genotypes.txt` is assigned to be the genotype data frame, which is large dimension data set, so use `dim`, `str`, `glimpse` and etc functions to know the number of rows and columns, column names and their variable types.
+
+```{r}
+dim(genotype)
+sapply(genotype, class)[1:6]
+#str(genotype)
+#glimpse(genotype)
+colnames(genotype)[1:6]
+genotype[1:6,1:6]
+genotype %>% 
+  group_by(Group) %>% 
+  count()
+
+```
+
+#### SNP markers information
+
+-   `snp_position.txt` is assigned to be the pos data frame.
+-   Using the same function to know the data strcuture of the pos data frame.
+-   Replacing the `unknown` and `multiple` in Position column to be `NA` and to know how many numbers of SNP markers, and their maximum and minimum position value in each of chromosome.
+
+```{r}
+dim(pos)
+sapply(pos, class)[1:6]
+str(pos)
+glimpse(pos)
+colnames(pos)[1:6]
+pos[1:6,1:6]
+
+pos[pos == "unknown"] <- NA
+pos[pos == "multiple"] <- NA
+
+pos %>% 
+  group_by(Chromosome) %>% 
+  summarise(Max=max(Position, na.rm = T), Min=min(Position, na.rm = T),    Number=length(Position))
+
+```
+
+### Data processing
+
+#### Subset the pos data frame to keep the SNP_ID, Chr, and Pos columns for the merging purpose
+
+-   Adjust the variable type of `chromosome` and `Position` to be numeric and remove the `unknown` and `multiple` which are regarded as NAs out to be posred dataframe.
+
+```{r}
+
+posred <- pos %>% 
+  dplyr::select(SNP_ID, Chromosome, Position) %>% 
+  mutate(Chromosome=as.numeric(Chromosome),
+         Position=as.numeric(Position))%>%  
+  filter_all(all_vars(. != "NA")) 
+
+str(posred)
+
+```
+
+#### Subset the genotype data into maize and teosinte datasets
+
+-   Subset the maize and teosinte genotypes by the `Group` column. Either `[ which()]` or `%>% filter()` works out.
+
+```{r}
+
+maize <- genotype[which(genotype$Group=="ZMMIL" | genotype$Group =="ZMMLR" | genotype$Group == "ZMMMR"),]
+teosinte <-genotype[which(genotype$Group=="ZMPBA" | genotype$Group =="ZMPIL" | genotype$Group == "ZMPJA"),]
+
+```
+
+-   Another method.
+
+```{r, eval=FALSE}
+
+maize <- genotype %>% filter(Group=="ZMMIL" | Group =="ZMMLR" | Group == "ZMMMR")
+teosinte <-genotype %>% filter(Group=="ZMPBA" | Group =="ZMPIL" | Group == "ZMPJA")
+
+```
+
+#### Formatting the maize genotype with SNP information by merging the posred and maize data
+
+-   Transform the `maize` data for merging with `posred` by `SNP_ID` column, and descend the Chromosome and Position.
+
+```{r}
+
+maize <- maize[,c(-2,-3)]
+maize[1:6,1:6] ## have a look
+maize <- t(maize)
+maize <- cbind(rownames(maize),maize)
+rownames(maize) <- NULL
+colnames(maize) <- maize[1,]
+maize <- maize[-1,]
+maize <- as.data.frame(maize)
+colnames(maize)[1] <- "SNP_ID" 
+maizewp <- merge(posred, maize, by = "SNP_ID")
+maizewp <- maizewp %>% arrange(Chromosome,Position) 
+## maize genotypes with SNP position information
+
+```
+
+#### Formatting the teosinte genotype with SNP information by merging the posred and teosinte data
+
+-   The same methods as with maize for merging data frame.
+
+```{r}
+
+teosinte <- teosinte[,c(-2,-3)]
+teosinte <- t(teosinte)
+teosinte <- cbind(rownames(teosinte),teosinte)
+rownames(teosinte) <- NULL
+colnames(teosinte) <- teosinte[1,]
+teosinte <- teosinte[-1,]
+teosinte <- as.data.frame(teosinte)
+colnames(teosinte)[1] <- "SNP_ID" 
+teosintewp <- merge(posred, teosinte, by = "SNP_ID")
+teosintewp <- teosintewp %>% arrange(Chromosome,Position)
+
+```
+
+#### Splitting the maize data into different files by the chromosomes and SNP positions.
+
+-   The followings are using `loop` to separate the `maizewp` and `teosintewp` data frames to 10, 10, 10, and 10 files, respectively, by the chromosome and SNP positions in total 40 files. Also, change the missing genotype to be `?` or `-`.
+
+```{r, eval = FALSE}
+chr <- 1:10
+for (i in chr) {
+  files_inc <- maizewp[maizewp$Chromosome == i,]
+  files_inc[files_inc == "?/?"] <- "?"
+  if (i < 10) { write.table(files_inc, file = paste("Maize_Chr0",i,"_increase.txt",sep=""),row.names = FALSE,sep = "\t",quote = FALSE) }
+  else {write.table(files_inc, file = paste("Maize_Chr",i,"_increase.txt",sep=""),row.names = FALSE, sep = "\t",quote = FALSE)}
+  
+  files_dec <- maizewp[maizewp$Chromosome == i,]
+  files_dec[files_dec == "?/?"] <- "-"
+  files_dec <- files_dec %>% arrange(desc(Chromosome),desc(Position))
+  if (i < 10) { write.table(files_dec, file = paste("Maize_Chr0",i,"_decrease.txt",sep=""),row.names = FALSE,sep = "\t",quote = FALSE) }
+  else {write.table(files_dec, file = paste("Maize_Chr",i,"_decrease.txt",sep=""),row.names = FALSE, sep = "\t",quote = FALSE)}
+}
+  
+
+```
+
+#### Splitting the teosinte data into different files by chromosomes and SNP positions.
+
+```{r, eval = FALSE}
+
+chr <- 1:10
+for (i in chr) {
+  files_inc <- teosintewp[teosintewp$Chromosome == i,]
+  files_inc[files_inc == "?/?"] <- "?"
+  if (i < 10) { write.table(files_inc, file = paste("Teosinte_Chr0",i,"_increase.txt",sep=""),row.names = FALSE,sep = "\t",quote = FALSE) }
+  else {write.table(files_inc, file = paste("Teosinte_Chr",i,"_increase.txt",sep=""),row.names = FALSE, sep = "\t",quote = FALSE)}
+  
+  files_dec <- teosintewp[teosintewp$Chromosome == i,]
+  files_dec[files_dec == "?/?"] <- "-"
+  files_dec <- files_dec %>% arrange(desc(Chromosome),desc(Position))
+  if (i < 10) { write.table(files_dec, file = paste("Teosinte_Chr0",i,"_decrease.txt",sep=""),row.names = FALSE,sep = "\t",quote = FALSE) }
+  else {write.table(files_dec, file = paste("Teosinte_Chr",i,"_decrease.txt",sep=""),row.names = FALSE, sep = "\t",quote = FALSE)}
+}
+
+```
+
+## Part II
+
+### Plotting
+
+#### SNPs per chromosome
+
+```{r}
+
+pos %>% 
+  dplyr::select(SNP_ID, Chromosome, Position) %>%
+  drop_na() %>%
+  mutate(Chromosome=as.double(Chromosome)) %>% 
+  ggplot()+
+  geom_bar(aes(x=Chromosome))+
+  scale_x_continuous(breaks = 1:10)
+
+```
+
+#### Missing data and amount of heterozygosity
+
+-   This chunk is the first version code for substituting the genotypes.
+
+```{r, eval = FALSE}
+
+## create a function to detect the SNP genotypes
+ABH <- function(x) {
+  if ( x == "A/A" | x == "C/C" | x == "G/G" | x == "T/T") {
+    return("A|B")
+  }
+  else if (x == "?/?") {
+    return("NA")
+  }
+  else {return("H")}
+}
+ABH_V <- Vectorize(ABH) ## make the function be a vectorized function 
+
+genotype3 <- genotype2 %>% 
+  pivot_longer(3:last_col(), names_to = "SNP", values_to = "Genotype") %>% 
+  mutate( GenotypeABH = ABH_V(Genotype)) 
+
+
+```
+
+```{r}
+
+color_Palette = c("#00AFBB", "#E7B800", "#FC4E07")
+
+genotype2 <- genotype[,-2]
+genotype2[1:6,1:6]
+
+genotype3 <- genotype2 %>% 
+  pivot_longer(3:last_col(), names_to = "SNP", values_to = "Genotype") %>% 
+  mutate( GenotypeABH = ifelse(Genotype%in% c("C/C", "G/G", "A/A", "T/T"), "Homozygote", ifelse(Genotype == "?/?", "NA", "Heterozygote"))) 
+
+
+ggplot(genotype3)+
+  geom_bar(aes(x=Sample_ID, fill=GenotypeABH), position = "fill", width=1)+
+  scale_x_discrete(labels=NULL)+
+  scale_fill_manual(values = c("#00AFBB", "#E7B800", "#FC4E07")) ## change the color palette
+  
+ggplot(genotype3)+
+  geom_bar(aes(x=Group, fill=GenotypeABH), position = "fill")+
+  theme(axis.text = element_text( angle =90, color="black", size=10, face=1))
+  
+```
+
+#### The distribution of SNP maker postions on each of chromosomes
+
+```{r, warning = FALSE}
+
+sample_size = posred %>% group_by(Chromosome) %>% summarize(num=n())
+
+library(viridis)  
+
+posred %>%
+  left_join(sample_size) %>%
+  mutate(myaxis = paste0(Chromosome, "\n", "n=", num)) %>%
+  ggplot( aes(x=myaxis, y=Position, fill=as.character(Chromosome)))+
+  geom_violin(width=1.4) +
+  geom_boxplot(width=0.1, color="grey", alpha=0.2) +
+  scale_fill_viridis(discrete = TRUE) +
+    theme(
+      legend.position="none",
+      plot.title = element_text(size=11)
+    ) +
+    ggtitle("The distribution of SNP postion on each chromosomes") +
+    xlab("Chromosome") 
+
+```
