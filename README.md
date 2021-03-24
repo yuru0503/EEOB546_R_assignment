@@ -9,5 +9,5 @@ There are two data files, `fang_et_al_genotypes.txt` and `snp_position.txt`.
 * The details is in the Assignment.Rmd file.
 ### Part II
 1. Ploting
-* The detail is in the Assignment.Rmd file as well. The plots could see in PDF file.
+* The detail is in the Assignment.Rmd file as well. The plots show in the PDF file.
 
